@@ -14,6 +14,8 @@ import {
 export default function HomeContent() {
   // ================= LANGUE =================
   const [lang, setLang] = useState<"fr" | "en">("fr");
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+
 
   useEffect(() => {
     const storedLang = localStorage.getItem("msm-lang");
@@ -83,40 +85,83 @@ export default function HomeContent() {
   return (
     <main>
       {/* ================= HEADER ================= */}
-      <header style={styles.header}>
-        <div style={styles.logo}>
-          <Image
-            src="/logo.png"
-            alt="MSM ACTIVITY"
-            width={70}
-            height={70}
-            style={{ borderRadius: "50%" }}
-          />
-        </div>
-        <nav style={styles.nav}>
-          <button style={styles.link} onClick={() => scrollToSection("hero")}>
-            {lang === "fr" ? "Accueil" : "Home"}
-          </button>
-          <button style={styles.link} onClick={() => scrollToSection("services")}>
-            {lang === "fr" ? "Services" : "Services"}
-          </button>
-          <button style={styles.link} onClick={() => scrollToSection("why")}>
-            {lang === "fr" ? "Pourquoi nous" : "Why us"}
-          </button>
-          <button style={styles.link} onClick={() => scrollToSection("partners")}>
-            {lang === "fr" ? "Partenaires" : "Partners"}
-          </button>
-          <button style={styles.link} onClick={() => scrollToSection("process")}>
-            {lang === "fr" ? "Méthode" : "Process"}
-          </button>
-          <button style={styles.link} onClick={() => scrollToSection("contact")}>
-            {lang === "fr" ? "Contact" : "Contact"}
-          </button>
-        </nav>
-        <button style={styles.langButton} onClick={toggleLang}>
-          {lang === "fr" ? "EN" : "FR"}
+     <header style={styles.header}>
+  {/* LOGO */}
+  <div style={styles.logo}>
+    <Image
+      src="/logo.png"
+      alt="MSM ACTIVITY"
+      width={70}
+      height={70}
+      style={{ borderRadius: "50%" }}
+    />
+  </div>
+
+  {/* NAV DESKTOP */}
+  <nav style={styles.nav} className="desktop-nav">
+    <button style={styles.link} onClick={() => scrollToSection("hero")}>
+      {lang === "fr" ? "Accueil" : "Home"}
+    </button>
+    <button style={styles.link} onClick={() => scrollToSection("services")}>
+      {lang === "fr" ? "Services" : "Services"}
+    </button>
+    <button style={styles.link} onClick={() => scrollToSection("why")}>
+      {lang === "fr" ? "Pourquoi nous" : "Why us"}
+    </button>
+    <button style={styles.link} onClick={() => scrollToSection("partners")}>
+      {lang === "fr" ? "Partenaires" : "Partners"}
+    </button>
+    <button style={styles.link} onClick={() => scrollToSection("process")}>
+      {lang === "fr" ? "Méthode" : "Process"}
+    </button>
+    <button style={styles.link} onClick={() => scrollToSection("contact")}>
+      {lang === "fr" ? "Contact" : "Contact"}
+    </button>
+  </nav>
+
+  {/* ACTIONS (LANG + BURGER) */}
+  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+    <button style={styles.langButton} onClick={toggleLang}>
+      {lang === "fr" ? "EN" : "FR"}
+    </button>
+
+    {/* BURGER MOBILE */}
+    <button
+      className="burger"
+      style={styles.burger}
+      onClick={() => setMenuOpen(!menuOpen)}
+      aria-label="Menu"
+    >
+      {menuOpen ? "✕" : "☰"}
+    </button>
+  </div>
+
+  {/* MENU MOBILE */}
+  {menuOpen && (
+    <div style={styles.mobileMenu}>
+      {[
+        ["hero", "Accueil", "Home"],
+        ["services", "Services", "Services"],
+        ["why", "Pourquoi nous", "Why us"],
+        ["partners", "Partenaires", "Partners"],
+        ["process", "Méthode", "Process"],
+        ["contact", "Contact", "Contact"],
+      ].map(([id, fr, en]) => (
+        <button
+          key={id}
+          style={styles.mobileLink}
+          onClick={() => {
+            scrollToSection(id);
+            setMenuOpen(false);
+          }}
+        >
+          {lang === "fr" ? fr : en}
         </button>
-      </header>
+      ))}
+    </div>
+  )}
+</header>
+
 
      {/* ================= HERO ================= */}
 <section id="hero" style={styles.hero}>
@@ -362,5 +407,35 @@ const styles: { [key: string]: React.CSSProperties } = {
   margin: "0 auto",
   textAlign: "center",
 },
+burger: {
+  display: "none",
+  fontSize: "28px",
+  background: "none",
+  border: "none",
+  color: "#fff",
+  cursor: "pointer",
+},
+
+mobileMenu: {
+  position: "absolute",
+  top: "100%",
+  left: 0,
+  width: "100%",
+  background: "var(--msm-blue)",
+  display: "flex",
+  flexDirection: "column",
+  padding: "20px 0",
+  zIndex: 999,
+},
+
+mobileLink: {
+  padding: "14px 0",
+  background: "none",
+  border: "none",
+  color: "var(--msm-orange)",
+  fontSize: "18px",
+  cursor: "pointer",
+},
+
 
 };
