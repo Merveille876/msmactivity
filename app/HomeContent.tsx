@@ -380,7 +380,16 @@ const styles: { [key: string]: React.CSSProperties } = {
   hero: { padding: "120px 20px", textAlign: "center" },
   title: { color: "var(--msm-orange)", marginBottom: "30px" },
   lead: { fontSize: "18px", maxWidth: "800px", margin: "0 auto", lineHeight: 1.6 },
-  stats: { display: "flex", justifyContent: "center", gap: "60px", padding: "60px 20px", background: "#fff" },
+stats: {
+  display: "flex",
+  flexDirection: "row", // par défaut
+  justifyContent: "center",
+  gap: "60px",
+  padding: "60px 20px",
+  background: "#fff",
+  flexWrap: "wrap", // ajoute wrap pour que ça passe en ligne suivante si besoin
+  textAlign: "center",
+},
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "30px" },
   card: { padding: "32px", borderRadius: "14px", background: "#fff", boxShadow: "0 6px 18px rgba(0,0,0,0.08)", transition: "all 0.3s ease", cursor: "pointer" },
   icon: { color: "var(--msm-orange)", marginBottom: "20px" },
