@@ -75,7 +75,7 @@ export default function HomeContent() {
 
   // ================= PARTENAIRES =================
 const partners = [
-  { name: "EYIMO SERVICEs AUTO", years: "4 ans d’existence", field: "Transport & logistique", logo: "/partners/eyimo.jpeg" },
+  { name: "EYIMO SERVICES AUTO", years: "4 ans d’existence", field: "Transport & logistique", logo: "/partners/eyimo.jpeg" },
   { name: "MOKOLI GROUP", years: "5 ans d’existence", field: "Assurances & services financiers", logo: "/partners/mokoli.jpeg" },
   { name: "BELIFE INSURANCE GENERAL", years: "Entreprise reconnue", field: "Assurances", logo: "/partners/belife.jpeg" },
   { name: "INFO TELECOM GENERAL BUSINESS", years: "Plus de 10 ans d’existence", field: "Services informatiques", logo: "/partners/info.jpeg" }, 
