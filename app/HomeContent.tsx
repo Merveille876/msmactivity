@@ -82,6 +82,24 @@ const partners = [
   { name: "GOMSU GENERAL BUSINESS COMPANY", years: "1 an d’existence", field: "Prestations de services divers", logo: "/partners/gomsu.jpeg" },
 ];
 
+// ================= REVIEWS =================
+const [reviews, setReviews] = useState<
+  { name: string; rating: number; comment: string }[]
+>([]);
+
+useEffect(() => {
+  const savedReviews = localStorage.getItem("msm-reviews");
+  if (savedReviews) setReviews(JSON.parse(savedReviews));
+}, []);
+
+const addReview = (name: string, rating: number, comment: string) => {
+  const newReview = { name, rating, comment };
+  const updatedReviews = [newReview, ...reviews]; // le plus récent en premier
+  setReviews(updatedReviews);
+  localStorage.setItem("msm-reviews", JSON.stringify(updatedReviews));
+};
+
+
 
   return (
     <main>
@@ -350,6 +368,83 @@ const partners = [
           </div>
         </form>
       </section>
+
+      {/* ================= REVIEWS ================= */}
+<section id="reviews" style={styles.section}>
+  <h2 style={styles.title}>{lang === "fr" ? "Avis clients" : "Customer Reviews"}</h2>
+  <p style={styles.lead}>
+    {lang === "fr"
+      ? "Découvrez ce que nos clients pensent de MSM ACTIVITY."
+      : "See what our customers say about MSM ACTIVITY."}
+  </p>
+
+  {/* Formulaire */}
+  <form
+    style={styles.form}
+    onSubmit={(e) => {
+      e.preventDefault();
+      const form = e.target as HTMLFormElement;
+      const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+      const rating = parseInt(
+        (form.elements.namedItem("rating") as HTMLSelectElement).value
+      );
+      const comment = (form.elements.namedItem("comment") as HTMLTextAreaElement).value;
+      addReview(name, rating, comment);
+      form.reset();
+    }}
+  >
+    <input
+      name="name"
+      placeholder={lang === "fr" ? "Nom" : "Name"}
+      style={styles.input}
+      required
+    />
+    <select name="rating" style={styles.input} defaultValue="5">
+      <option value="5">⭐⭐⭐⭐⭐</option>
+      <option value="4">⭐⭐⭐⭐</option>
+      <option value="3">⭐⭐⭐</option>
+      <option value="2">⭐⭐</option>
+      <option value="1">⭐</option>
+    </select>
+    <textarea
+      name="comment"
+      placeholder={lang === "fr" ? "Votre avis" : "Your review"}
+      style={styles.textarea}
+      required
+    />
+    <button type="submit" style={styles.ctaButton}>
+      {lang === "fr" ? "Envoyer" : "Submit"}
+    </button>
+  </form>
+
+  {/* Liste des avis */}
+  <div style={{ marginTop: "40px" }}>
+    {reviews.length === 0 && (
+      <p style={{ opacity: 0.7 }}>
+        {lang === "fr"
+          ? "Aucun avis pour le moment, soyez le premier à commenter !"
+          : "No reviews yet, be the first to comment!"}
+      </p>
+    )}
+    {reviews.map((r, i) => (
+      <div
+        key={i}
+        style={{
+          padding: "20px",
+          borderBottom: "1px solid #ccc",
+          textAlign: "left",
+          borderRadius: "8px",
+          marginBottom: "20px",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+        }}
+      >
+        <strong>{r.name}</strong> — <span>{'⭐'.repeat(r.rating)}</span>
+        <p>{r.comment}</p>
+      </div>
+    ))}
+  </div>
+</section>
+
 
       {/* ================= FOOTER ================= */}
      <footer style={styles.footer}>
