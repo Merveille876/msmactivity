@@ -74,13 +74,14 @@ export default function HomeContent() {
   ];
 
   // ================= PARTENAIRES =================
-  const partners = [
-    { name: "EYIMO SERVICE AUTO", years: "4 ans d’existence", field: "Transport & logistique" },
-    { name: "Mokoli Group", years: "5 ans d’existence", field: "Assurances & services financiers" },
-    { name: "Prudential", years: "Entreprise reconnue", field: "Assurances" },
-    { name: "Info Telecol", years: "Plus de 10 ans d’existence", field: "Services informatiques" },
-    { name: "GOMSU General Business Company", years: "1 an d’existence", field: "Prestations de services divers" },
-  ];
+const partners = [
+  { name: "EYIMO SERVICEs AUTO", years: "4 ans d’existence", field: "Transport & logistique", logo: "/partners/eyimo.jpeg" },
+  { name: "MOKOLI GROUP", years: "5 ans d’existence", field: "Assurances & services financiers", logo: "/partners/mokoli.jpeg" },
+  { name: "BELIFE INSURANCE GENERAL", years: "Entreprise reconnue", field: "Assurances", logo: "/partners/belife.jpeg" },
+  { name: "INFO TELECOM GENERAL BUSINESS", years: "Plus de 10 ans d’existence", field: "Services informatiques", logo: "/partners/info.jpeg" }, 
+  { name: "GOMSU GENERAL BUSINESS COMPANY", years: "1 an d’existence", field: "Prestations de services divers", logo: "/partners/gomsu.jpeg" },
+];
+
 
   return (
     <main>
@@ -230,24 +231,36 @@ export default function HomeContent() {
       </section>
 
       {/* ================= PARTENAIRES ================= */}
-      <section id="partners" style={styles.section}>
-        <h2 style={styles.title}>{lang === "fr" ? "Ils nous font confiance" : "Our Partners"}</h2>
-        <p style={styles.lead}>
-          {lang === "fr"
-            ? "MSM ACTIVITY s’appuie sur un réseau de partenaires solides, issus de secteurs complémentaires, afin d’offrir des solutions complètes et fiables."
-            : "MSM ACTIVITY relies on a strong network of partners across complementary sectors to offer complete and reliable solutions."}
-        </p>
+    <section id="partners" style={styles.section}>
+  <h2 style={styles.title}>{lang === "fr" ? "Ils nous font confiance" : "Our Partners"}</h2>
+  <p style={styles.lead}>
+    {lang === "fr"
+      ? "MSM ACTIVITY s’appuie sur un réseau de partenaires solides, issus de secteurs complémentaires, afin d’offrir des solutions complètes et fiables."
+      : "MSM ACTIVITY relies on a strong network of partners across complementary sectors to offer complete and reliable solutions."}
+  </p>
 
-        <div style={styles.partnersGrid}>
-          {partners.map((p, i) => (
-            <div key={i} style={styles.partnerCard}>
-              <FaHandshake size={28} color="var(--msm-orange)" />
-              <h3 style={{ ...styles.cardTitle, marginTop: 12 }}>{p.name}</h3>
-              <p style={styles.partnerField}>{p.field}</p>
-              <span style={styles.partnerYears}>{p.years}</span>
-            </div>
-          ))}
-        </div>
+  <div style={styles.partnersGrid}>
+  {partners.map((p, i) => (
+    <div key={i} style={styles.partnerCard}>
+      <Image
+        src={p.logo}        // chemin du logo
+        alt={p.name}        // description pour l'accessibilité
+        width={80}          // largeur
+        height={80}         // hauteur
+        style={{
+          objectFit: "cover",   // pour que l'image remplisse le rond sans déformation
+          borderRadius: "50%",  // rend l'image ronde
+          marginBottom: "12px",
+        }}
+      />
+      <h3 style={{ ...styles.cardTitle, marginTop: 12 }}>{p.name}</h3>
+      <p style={styles.partnerField}>{p.field}</p>
+      <span style={styles.partnerYears}>{p.years}</span>
+    </div>
+  ))}
+</div>
+
+
 
         {/* BOUTON DEVENIR PARTENAIRE */}
         <button style={{...styles.ctaButton, marginTop: 30}} onClick={() => scrollToSection("contact")}>
@@ -396,10 +409,25 @@ stats: {
   cardTitle: { marginBottom: "12px", color: "var(--msm-orange)" },
   why: { padding: "90px 20px", background: "#0f172a", color: "#fff", textAlign: "center" },
   whyCard: { display: "flex", alignItems: "center", gap: "12px", background: "#111827", padding: "22px", borderRadius: "12px" },
-  partnersGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "30px", marginTop: "50px" },
-  partnerCard: { padding: "30px", borderRadius: "14px", background: "#fff", boxShadow: "0 8px 22px rgba(0,0,0,0.08)", transition: "transform 0.3s ease", cursor: "pointer" },
-  partnerField: { marginTop: "10px", fontWeight: 500 },
-  partnerYears: { display: "block", marginTop: "8px", fontSize: "14px", opacity: 0.7 },
+partnersGrid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+  gap: "30px",
+  marginTop: "50px",
+  justifyItems: "center", // centre les logos et textes
+},
+partnerCard: {
+  padding: "30px",
+  borderRadius: "14px",
+  background: "#fff",
+  boxShadow: "0 8px 22px rgba(0,0,0,0.08)",
+  transition: "transform 0.3s ease",
+  cursor: "pointer",
+  textAlign: "center",
+},
+partnerField: { marginTop: "10px", fontWeight: 500 },
+partnerYears: { display: "block", marginTop: "8px", fontSize: "14px", opacity: 0.7 },
+
   process: { maxWidth: "600px", margin: "0 auto", textAlign: "left", lineHeight: 2 },
   cta: { padding: "110px 20px", color: "#fff", textAlign: "center" },
   ctaButton: { marginTop: "24px", padding: "16px 38px", fontSize: "18px", borderRadius: "30px", border: "none", cursor: "pointer", background: "var(--msm-orange)", color: "#fff" },
