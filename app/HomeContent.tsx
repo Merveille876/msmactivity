@@ -11,10 +11,17 @@ import {
   FaHandshake,
 } from "react-icons/fa";
 
+// ================= REVIEWS =================
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, updateDoc, doc, arrayUnion } from "firebase/firestore";
+import { db } from "../lib/firebase";
+
+
 export default function HomeContent() {
   // ================= LANGUE =================
   const [lang, setLang] = useState<"fr" | "en">("fr");
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [openService, setOpenService] = useState<number | null>(null);
+
 
 
   useEffect(() => {
@@ -34,52 +41,130 @@ export default function HomeContent() {
     if (section) section.scrollIntoView({ behavior: "smooth" });
   };
 
-  // ================= SERVICES =================
-  const services = [
-    {
-      title: lang === "fr" ? "Développement sur mesure" : "Custom Development",
-      description:
-        lang === "fr"
-          ? "Sites web, applications et outils métiers performants, conçus pour évoluer avec votre activité."
-          : "Websites, apps and business tools designed to scale with your business.",
-      icon: <FaLaptopCode size={42} />,
-    },
-    {
-      title: lang === "fr" ? "Maintenance & support" : "Maintenance & Support",
-      description:
-        lang === "fr"
-          ? "Sécurisation, mises à jour et assistance continue pour garantir la stabilité de vos systèmes."
-          : "Security, updates and continuous support to ensure system stability.",
-      icon: <FaTools size={42} />,
-    },
-    {
-      title: lang === "fr" ? "Formation professionnelle" : "Professional Training",
-      description:
-        lang === "fr"
-          ? "Formations pratiques et personnalisées pour rendre vos équipes autonomes et efficaces."
-          : "Practical and tailored training to make your teams autonomous and efficient.",
-      icon: <FaChalkboardTeacher size={42} />,
-    },
-    {
-      title:
-        lang === "fr"
-          ? "Analyse & valorisation des données"
-          : "Data Analysis & Insights",
-      description:
-        lang === "fr"
-          ? "Tableaux de bord, reporting et analyses pour transformer vos données en décisions stratégiques."
-          : "Dashboards, reporting and analysis to turn data into strategic decisions.",
-      icon: <FaChartLine size={42} />,
-    },
-  ];
+ const services = [
+  {
+    title: lang === "fr" ? "Analyse & Conception" : "Analysis & Design",
+    description:
+      lang === "fr"
+        ? "Nous définissons précisément vos besoins avant tout développement."
+        : "We clearly define your needs before any development.",
+    details:
+      lang === "fr"
+        ? "Nous rédigeons un cahier de charges simple et structuré pour clarifier vos objectifs, éviter les erreurs coûteuses et garantir que le projet correspond exactement à vos attentes."
+        : "We create structured specifications to clarify objectives, avoid costly mistakes, and ensure the project matches your expectations.",
+    icon: <FaChartLine size={42} />,
+  },
+  {
+    title: lang === "fr" ? "Développement sur Mesure" : "Custom Development",
+    description:
+      lang === "fr"
+        ? "Création d'applications adaptées à votre activité."
+        : "Creation of applications tailored to your business.",
+    details:
+      lang === "fr"
+        ? "Nous développons des solutions web et mobiles personnalisées qui améliorent votre productivité, automatisent vos tâches et modernisent votre entreprise."
+        : "We develop custom web and mobile solutions to improve productivity, automate tasks and modernize your business.",
+    icon: <FaLaptopCode size={42} />,
+  },
+  {
+    title: lang === "fr" ? "Support & Maintenance" : "Support & Maintenance",
+    description:
+      lang === "fr"
+        ? "Assistance continue et mise à jour de vos systèmes."
+        : "Continuous assistance and system updates.",
+    details:
+      lang === "fr"
+        ? "Nous surveillons, mettons à jour et sécurisons vos systèmes pour éviter les pannes, pertes de données ou problèmes techniques."
+        : "We monitor, update and secure your systems to prevent breakdowns and data loss.",
+    icon: <FaTools size={42} />,
+  },
+  {
+    title: lang === "fr" ? "Formation & Accompagnement" : "Training & Coaching",
+    description:
+      lang === "fr"
+        ? "Renforcement des compétences de votre équipe."
+        : "Strengthening your team's skills.",
+    details:
+      lang === "fr"
+        ? "Nous formons vos équipes pour qu’elles comprennent et utilisent efficacement les outils numériques, augmentant ainsi leur performance."
+        : "We train your team to efficiently use digital tools and increase performance.",
+    icon: <FaChalkboardTeacher size={42} />,
+  },
+];
 
-  // ================= PARTENAIRES =================
-const partners = [
-  { name: "EYIMO SERVICES AUTO", years: "4 ans d’existence", field: "Transport & logistique", logo: "/partners/eyimo.jpeg" },
-  { name: "MOKOLI GROUP", years: "5 ans d’existence", field: "Assurances & services financiers", logo: "/partners/mokoli.jpeg" },
-  { name: "BELIFE INSURANCE GENERAL", years: "Entreprise reconnue", field: "Assurances", logo: "/partners/belife.jpeg" },
-  { name: "INFO TELECOM GENERAL BUSINESS", years: "Plus de 10 ans d’existence", field: "Services informatiques", logo: "/partners/info.jpeg" }, 
-  { name: "GOMSU GENERAL BUSINESS COMPANY", years: "1 an d’existence", field: "Prestations de services divers", logo: "/partners/gomsu.jpeg" },
+const [loadingReviews, setLoadingReviews] = useState(true);
+
+useEffect(() => {
+  const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetched = snapshot.docs.map(doc => doc.data() as { name: string; rating: number; comment: string });
+    setReviews(fetched);
+    setLoadingReviews(false);
+  });
+  return () => unsubscribe();
+}, []);
+
+const addReviewFirebase = async (name: string, rating: number, comment: string) => {
+  try {
+    await addDoc(collection(db, "reviews"), {
+      name,
+      rating,
+      comment,
+      createdAt: serverTimestamp(), // OK ici, car c’est un doc unique
+    });
+  } catch (err) {
+    console.error("Erreur lors de l'ajout de l'avis :", err);
+  }
+};
+
+
+
+ const partners = [
+  {
+    name: "EYIMO SERVICES AUTO",
+    years: "4 ans d’existence",
+    field: "Transport & logistique",
+    description:
+      "Entreprise spécialisée dans les services de transport, la logistique et la gestion de flotte automobile pour entreprises et particuliers.",
+    website: "https://eyimo-services.com", // Mets le vrai lien ici
+    logo: "/partners/eyimo.jpeg",
+  },
+  {
+    name: "MOKOLI GROUP",
+    years: "5 ans d’existence",
+    field: "Assurances & services financiers",
+    description:
+      "Cabinet proposant des solutions d’assurance, de protection financière et d’accompagnement stratégique pour entreprises et particuliers.",
+    website: "https://mokoligroup.com",
+    logo: "/partners/mokoli.jpeg",
+  },
+  {
+    name: "BELIFE INSURANCE GENERAL",
+    years: "Entreprise reconnue",
+    field: "Assurances",
+    description:
+      "Compagnie d’assurance offrant des produits adaptés aux besoins des particuliers et professionnels.",
+    website: "https://belifeinsurance.com",
+    logo: "/partners/belife.jpeg",
+  },
+  {
+    name: "INFO TELECOM GENERAL BUSINESS",
+    years: "Plus de 10 ans d’existence",
+    field: "Services informatiques",
+    description:
+      "Entreprise spécialisée dans les solutions informatiques, télécommunications et services numériques pour entreprises.",
+    website: "https://infotelecom.com",
+    logo: "/partners/info.jpeg",
+  },
+  {
+    name: "GOMSU GENERAL BUSINESS COMPANY",
+    years: "1 an d’existence",
+    field: "Prestations de services divers",
+    description:
+      "Société polyvalente proposant divers services professionnels et solutions adaptées aux besoins des entreprises locales.",
+    website: "https://gomsucompany.com",
+    logo: "/partners/gomsu.jpeg",
+  },
 ];
 
 // ================= REVIEWS =================
@@ -115,6 +200,7 @@ const addReview = (name: string, rating: number, comment: string) => {
       style={{ borderRadius: "50%" }}
     />
   </div>
+  
 
   {/* NAV DESKTOP */}
   <nav style={styles.nav} className="desktop-nav">
@@ -204,49 +290,190 @@ const addReview = (name: string, rating: number, comment: string) => {
   <h3>{lang === "fr" ? "Qui sommes-nous ?" : "Who are we?"}</h3>
   <p>
     {lang === "fr"
-      ? "MSM ACTIVITY est une entreprise spécialisée dans le développement d’applications informatiques, les services numériques, la formation et le conseil. Nous proposons des solutions modernes, fiables et évolutives adaptées à vos besoins."
-      : "MSM ACTIVITY is a company specialized in developing IT applications, digital services, training, and consulting. We provide modern, reliable, and scalable solutions tailored to your needs."}
+      ? "MSM ACTIVITY est une entreprise innovante dédiée au développement d’applications informatiques, aux services numériques, à la formation et au conseil stratégique. Nous combinons expertise technique et compréhension des besoins métiers pour fournir des solutions modernes, fiables et évolutives, conçues pour accompagner la croissance de votre entreprise et optimiser vos processus."
+      : "MSM ACTIVITY is an innovative company dedicated to IT application development, digital services, training, and strategic consulting. We combine technical expertise with business understanding to deliver modern, reliable, and scalable solutions designed to drive your company's growth and optimize your processes."}
+  </p>
+  <p>
+    {lang === "fr"
+      ? "Notre approche est centrée sur le client : chaque projet est analysé en profondeur afin de proposer des solutions sur mesure, efficaces et pérennes. Nous mettons un point d’honneur à fournir un accompagnement personnalisé à chaque étape, garantissant la réussite et la satisfaction de nos partenaires."
+      : "Our approach is client-focused: every project is carefully analyzed to offer tailored, effective, and sustainable solutions. We are committed to providing personalized support at every stage, ensuring the success and satisfaction of our partners."}
   </p>
 </section>
 
 
+
       {/* ================= STATS ================= */}
-      <section style={styles.stats}>
-        <div><strong>+10</strong><span>{lang === "fr" ? "Projets livrés" : "Projects delivered"}</span></div>
-        <div><strong>100%</strong><span>{lang === "fr" ? "Solutions sur mesure" : "Custom solutions"}</span></div>
-        <div><strong>1</strong><span>{lang === "fr" ? "Interlocuteur dédié" : "Dedicated contact"}</span></div>
-      </section>
+<section style={styles.stats}>
+  <div>
+    <strong>+10</strong>
+    <span>
+      {lang === "fr" 
+        ? "Projets livrés" 
+        : "Projects delivered"}
+    </span>
+    <p style={{ fontSize: "14px", opacity: 0.8, marginTop: "4px" }}>
+      {lang === "fr"
+        ? "Des solutions réussies pour des entreprises locales et internationales."
+        : "Successful solutions for local and international businesses."}
+    </p>
+  </div>
+
+  <div>
+    <strong>100%</strong>
+    <span>
+      {lang === "fr" 
+        ? "Solutions sur mesure" 
+        : "Custom solutions"}
+    </span>
+    <p style={{ fontSize: "14px", opacity: 0.8, marginTop: "4px" }}>
+      {lang === "fr"
+        ? "Chaque projet est conçu pour répondre exactement aux besoins uniques de nos clients."
+        : "Every project is designed to perfectly meet our clients' unique needs."}
+    </p>
+  </div>
+
+  <div>
+    <strong>1</strong>
+    <span>
+      {lang === "fr" 
+        ? "Interlocuteur dédié" 
+        : "Dedicated contact"}
+    </span>
+    <p style={{ fontSize: "14px", opacity: 0.8, marginTop: "4px" }}>
+      {lang === "fr"
+        ? "Un point de contact unique pour un suivi simple et efficace."
+        : "A single point of contact for simple and efficient follow-up."}
+    </p>
+  </div>
+</section>
+
 
       {/* ================= SERVICES ================= */}
       <section id="services" style={styles.section}>
         <h2 style={styles.title}>{lang === "fr" ? "Nos expertises" : "Our Expertise"}</h2>
         <div style={styles.grid}>
-          {services.map((s, i) => (
-            <div key={i} style={styles.card}>
-              <div style={styles.icon}>{s.icon}</div>
-              <h3 style={styles.cardTitle}>{s.title}</h3>
-              <p>{s.description}</p>
-            </div>
-          ))}
+          {services.map((service, index) => (
+  <div
+    key={index}
+    style={styles.card}
+    onMouseEnter={(e) =>
+      (e.currentTarget.style.transform = "translateY(-8px)")
+    }
+    onMouseLeave={(e) =>
+      (e.currentTarget.style.transform = "translateY(0)")
+    }
+  >
+    <div style={{ color: "var(--msm-orange)", marginBottom: "16px" }}>
+      {service.icon}
+    </div>
+
+    <h3 style={{ marginBottom: "12px" }}>{service.title}</h3>
+    <p style={{ marginBottom: "12px", color: "#475569" }}>
+      {service.description}
+    </p>
+
+    <button
+      onClick={() =>
+        setOpenService(openService === index ? null : index)
+      }
+      style={{
+        background: "none",
+        border: "none",
+        color: "var(--msm-orange)",
+        cursor: "pointer",
+        fontWeight: 600,
+      }}
+    >
+      {openService === index
+        ? lang === "fr" ? "Voir moins" : "See less"
+        : lang === "fr" ? "Voir plus" : "See more"}
+    </button>
+
+    {openService === index && (
+      <div
+        style={{
+          marginTop: "12px",
+          padding: "12px",
+          background: "#f8fafc",
+          borderRadius: "8px",
+          fontSize: "14px",
+          color: "#334155",
+          transition: "all 0.3s ease",
+        }}
+      >
+        {service.details}
+      </div>
+    )}
+  </div>
+))}
+
         </div>
       </section>
 
       {/* ================= POURQUOI NOUS ================= */}
-      <section id="why" style={styles.why}>
-        <h2>{lang === "fr" ? "Pourquoi choisir MSM ACTIVITY ?" : "Why choose MSM ACTIVITY?"}</h2>
-        <div style={styles.grid}>
-          {[
-            lang === "fr" ? "Approche orientée business" : "Business-oriented approach",
-            lang === "fr" ? "Solutions évolutives et durables" : "Scalable & sustainable solutions",
-            lang === "fr" ? "Communication claire et transparente" : "Clear & transparent communication",
-            lang === "fr" ? "Ouverture aux partenariats stratégiques" : "Open to strategic partnerships",
-          ].map((item, i) => (
-            <div key={i} style={styles.whyCard}>
-              <FaCheckCircle /> <span>{item}</span>
-            </div>
-          ))}
+<section id="why" style={styles.why}>
+  <h2>
+    {lang === "fr"
+      ? "Pourquoi choisir MSM ACTIVITY ?"
+      : "Why choose MSM ACTIVITY?"}
+  </h2>
+
+  <div style={styles.grid} onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-6px)")}
+onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+>
+    {[
+      {
+        title:
+          lang === "fr"
+            ? "Approche orientée business"
+            : "Business-oriented approach",
+        desc:
+          lang === "fr"
+            ? "Nous analysons d’abord vos objectifs commerciaux avant de proposer une solution technique. La technologie doit générer des résultats concrets."
+            : "We analyze your business goals first before proposing any technical solution. Technology must generate real results.",
+      },
+      {
+        title:
+          lang === "fr"
+            ? "Solutions évolutives et durables"
+            : "Scalable & sustainable solutions",
+        desc:
+          lang === "fr"
+            ? "Nos solutions sont conçues pour grandir avec votre entreprise et éviter les reconstructions coûteuses à long terme."
+            : "Our solutions are designed to grow with your business and avoid costly rebuilds in the future.",
+      },
+      {
+        title:
+          lang === "fr"
+            ? "Communication claire et transparente"
+            : "Clear & transparent communication",
+        desc:
+          lang === "fr"
+            ? "Nous expliquons chaque étape de manière simple afin que vous compreniez parfaitement votre projet, même sans être informaticien."
+            : "We explain every step in simple terms so you fully understand your project, even without technical knowledge.",
+      },
+      {
+        title:
+          lang === "fr"
+            ? "Partenariats stratégiques solides"
+            : "Strong strategic partnerships",
+        desc:
+          lang === "fr"
+            ? "Nous collaborons avec des entreprises complémentaires pour offrir des solutions complètes et fiables."
+            : "We collaborate with complementary companies to deliver complete and reliable solutions.",
+      },
+    ].map((item, i) => (
+      <div key={i} style={styles.whyCard}>
+        <FaCheckCircle size={26} style={{ color: "var(--msm-orange)" }} />
+        <div>
+          <h3 style={{ marginBottom: "8px" }}>{item.title}</h3>
+          <p style={{ opacity: 0.85, fontSize: "15px" }}>{item.desc}</p>
         </div>
-      </section>
+      </div>
+    ))}
+  </div>
+</section>
+
 
       {/* ================= PARTENAIRES ================= */}
     <section id="partners" style={styles.section}>
@@ -257,25 +484,54 @@ const addReview = (name: string, rating: number, comment: string) => {
       : "MSM ACTIVITY relies on a strong network of partners across complementary sectors to offer complete and reliable solutions."}
   </p>
 
+  <div style={styles.partnersGrid} onMouseEnter={(e) =>
+  (e.currentTarget.style.transform = "translateY(-6px)")
+}
+onMouseLeave={(e) =>
+  (e.currentTarget.style.transform = "translateY(0)")
+}
+>
   <div style={styles.partnersGrid}>
   {partners.map((p, i) => (
     <div key={i} style={styles.partnerCard}>
       <Image
-        src={p.logo}        // chemin du logo
-        alt={p.name}        // description pour l'accessibilité
-        width={80}          // largeur
-        height={80}         // hauteur
+        src={p.logo}
+        alt={p.name}
+        width={90}
+        height={90}
         style={{
-          objectFit: "cover",   // pour que l'image remplisse le rond sans déformation
-          borderRadius: "50%",  // rend l'image ronde
-          marginBottom: "12px",
+          objectFit: "cover",
+          borderRadius: "50%",
+          marginBottom: "16px",
         }}
       />
-      <h3 style={{ ...styles.cardTitle, marginTop: 12 }}>{p.name}</h3>
-      <p style={styles.partnerField}>{p.field}</p>
+
+      <h3 style={{ ...styles.cardTitle }}>{p.name}</h3>
+
+      <p style={styles.partnerField}>
+        <strong>{p.field}</strong>
+      </p>
+
+      <p style={styles.partnerDescription}>
+        {p.description}
+      </p>
+
       <span style={styles.partnerYears}>{p.years}</span>
+
+      {p.website && (
+        <a
+          href={p.website}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={styles.partnerButton}
+        >
+          {lang === "fr" ? "Visiter le site" : "Visit website"}
+        </a>
+      )}
     </div>
   ))}
+</div>
+
 </div>
 
 
@@ -286,31 +542,69 @@ const addReview = (name: string, rating: number, comment: string) => {
         </button>
       </section>
 
-      {/* ================= PROCESS ================= */}
-      <section id="process" style={styles.section}>
-        <h2 style={styles.title}>{lang === "fr" ? "Notre méthode de travail" : "Our Work Process"}</h2>
-        <ol style={styles.process}>
-          <li>{lang === "fr" ? "Analyse de vos besoins et enjeux" : "Analyze your needs & challenges"}</li>
-          <li>{lang === "fr" ? "Proposition de solution claire et chiffrée" : "Propose a clear & budgeted solution"}</li>
-          <li>{lang === "fr" ? "Développement et mise en œuvre" : "Development & implementation"}</li>
-          <li>{lang === "fr" ? "Tests, livraison et accompagnement" : "Testing, delivery & support"}</li>
-        </ol>
-      </section>
+     {/* ================= PROCESS ================= */}
+<section id="process" style={styles.section}>
+  <h2 style={styles.title}>
+    {lang === "fr" ? "Notre méthode de travail" : "Our Work Process"}
+  </h2>
+  <ol style={styles.process}>
+    <li>
+      <strong>{lang === "fr" ? "Analyse de vos besoins et enjeux" : "Analyze your needs & challenges"}</strong>
+      <p style={{ fontSize: "14px", opacity: 0.8, marginTop: "4px" }}>
+        {lang === "fr"
+          ? "Nous commençons chaque projet par une étude approfondie de vos objectifs, contraintes et attentes. Cette étape nous permet de définir un cahier des charges clair et de prévenir tout risque d'erreur."
+          : "We start every project with a thorough study of your goals, constraints, and expectations. This step allows us to define clear specifications and prevent any risk of error."}
+      </p>
+    </li>
+    <li>
+      <strong>{lang === "fr" ? "Proposition de solution claire et chiffrée" : "Propose a clear & budgeted solution"}</strong>
+      <p style={{ fontSize: "14px", opacity: 0.8, marginTop: "4px" }}>
+        {lang === "fr"
+          ? "Nous vous présentons une solution sur mesure, accompagnée d’un budget détaillé et d’un planning précis, afin que vous sachiez exactement ce que vous obtiendrez et à quel coût."
+          : "We present you with a tailored solution, along with a detailed budget and a precise timeline, so you know exactly what you will get and at what cost."}
+      </p>
+    </li>
+    <li>
+      <strong>{lang === "fr" ? "Développement et mise en œuvre" : "Development & implementation"}</strong>
+      <p style={{ fontSize: "14px", opacity: 0.8, marginTop: "4px" }}>
+        {lang === "fr"
+          ? "Nos équipes techniques mettent en œuvre la solution avec rigueur et expertise, en respectant les standards modernes et en garantissant performance, sécurité et évolutivité."
+          : "Our technical teams implement the solution with rigor and expertise, adhering to modern standards and ensuring performance, security, and scalability."}
+      </p>
+    </li>
+    <li>
+      <strong>{lang === "fr" ? "Tests, livraison et accompagnement" : "Testing, delivery & support"}</strong>
+      <p style={{ fontSize: "14px", opacity: 0.8, marginTop: "4px" }}>
+        {lang === "fr"
+          ? "Nous effectuons des tests complets pour garantir la qualité, livrons le projet clé en main et assurons un suivi personnalisé pour vous accompagner dans la prise en main et l’évolution de votre solution."
+          : "We perform comprehensive testing to ensure quality, deliver the project turnkey, and provide personalized support to help you adopt and evolve your solution."}
+      </p>
+    </li>
+  </ol>
+</section>
 
-      {/* ================= À PROPOS ================= */}
-      <section id="about" style={{ ...styles.section, background: "#f5f7fa" }}>
-        <h2 style={styles.title}>{lang === "fr" ? "À propos de MSM ACTIVITY" : "About MSM ACTIVITY"}</h2>
-        <p>
-          {lang === "fr"
-            ? "MSM ACTIVITY est née d’une conviction forte : la technologie doit être un levier de croissance, pas une contrainte."
-            : "MSM ACTIVITY was born from a strong belief: technology should be a growth driver, not a constraint."}
-        </p>
-        <p>
-          {lang === "fr"
-            ? "Nous combinons expertise technique, vision stratégique et accompagnement humain pour créer des solutions réellement utiles."
-            : "We combine technical expertise, strategic vision and human support to create truly useful solutions."}
-        </p>
-      </section>
+{/* ================= À PROPOS ================= */}
+<section id="about" style={{ ...styles.section, background: "#f5f7fa" }}>
+  <h2 style={styles.title}>
+    {lang === "fr" ? "À propos de MSM ACTIVITY" : "About MSM ACTIVITY"}
+  </h2>
+  <p>
+    {lang === "fr"
+      ? "MSM ACTIVITY est née d’une conviction forte : la technologie doit être un levier de croissance, et non une contrainte. Nous croyons que chaque entreprise, quelle que soit sa taille, peut tirer parti de solutions numériques innovantes pour se développer et se démarquer."
+      : "MSM ACTIVITY was born from a strong belief: technology should be a growth driver, not a constraint. We believe that every business, regardless of size, can leverage innovative digital solutions to grow and stand out."}
+  </p>
+  <p>
+    {lang === "fr"
+      ? "Notre force réside dans la combinaison de notre expertise technique, de notre vision stratégique et de notre accompagnement humain. Nous ne nous contentons pas de livrer des solutions, nous vous accompagnons à chaque étape pour garantir leur efficacité, leur adoption et leur évolution dans le temps."
+      : "Our strength lies in combining technical expertise, strategic vision, and human support. We don’t just deliver solutions; we guide you at every step to ensure their effectiveness, adoption, and long-term evolution."}
+  </p>
+  <p>
+    {lang === "fr"
+      ? "Chez MSM ACTIVITY, nous privilégions la transparence, la qualité et l’innovation pour créer des solutions réellement utiles, adaptées à vos besoins et capables de générer un impact concret sur votre activité."
+      : "At MSM ACTIVITY, we prioritize transparency, quality, and innovation to create solutions that are truly valuable, tailored to your needs, and capable of generating a real impact on your business."}
+  </p>
+</section>
+
 
       {/* ================= CTA ================= */}
       <section style={{ ...styles.cta, background: "var(--msm-blue)" }}>
@@ -322,55 +616,84 @@ const addReview = (name: string, rating: number, comment: string) => {
       </section>
 
       {/* ================= CONTACT ================= */}
-      <section id="contact" style={styles.section}>
-        <h2 style={styles.title}>{lang === "fr" ? "Contactez-nous" : "Contact Us"}</h2>
-        <p style={styles.lead}>
-          {lang === "fr" ? "Remplissez le formulaire ci-dessous ou choisissez votre moyen de contact préféré :" : "Fill out the form below or choose your preferred contact method:"}
-        </p>
+<section id="contact" style={styles.section}>
+  <h2 style={styles.title}>
+    {lang === "fr" ? "Contactez-nous" : "Contact Us"}
+  </h2>
+  <p style={styles.lead}>
+    {lang === "fr" 
+      ? "Remplissez le formulaire ci-dessous ou choisissez votre moyen de contact préféré :" 
+      : "Fill out the form below or choose your preferred contact method:"}
+  </p>
 
-        <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
-          <input name="name" placeholder={lang === "fr" ? "Nom" : "Name"} style={styles.input} required />
-          <input name="email" placeholder="Email" type="email" style={styles.input} required />
-          <textarea name="message" placeholder={lang === "fr" ? "Message" : "Message"} style={styles.textarea} required />
+  <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
+    <input 
+      name="name" 
+      placeholder={lang === "fr" ? "Nom" : "Name"} 
+      style={styles.input} 
+      required 
+    />
+    <input 
+      name="email" 
+      placeholder="Email" 
+      type="email" 
+      style={styles.input} 
+      required 
+    />
+    <input 
+      name="phone" 
+      placeholder={lang === "fr" ? "Numéro de téléphone" : "Phone number"} 
+      type="tel" 
+      style={styles.input} 
+      required 
+    />
+    <textarea 
+      name="message" 
+      placeholder={lang === "fr" ? "Message" : "Message"} 
+      style={styles.textarea} 
+      required 
+    />
 
-          <div style={styles.contactButtons}>
-            <button
-              type="button"
-              style={styles.contactButton}
-              onClick={() => {
-                const form = document.querySelector<HTMLFormElement>("form")!;
-                const name = (form.elements.namedItem("name") as HTMLInputElement).value;
-                const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-                const message = (form.elements.namedItem("message") as HTMLTextAreaElement).value;
-                const whatsappMessage = `Nom: ${name}\nEmail: ${email}\nMessage: ${message}`;
-                const whatsappLink = `https://wa.me/237677315024?text=${encodeURIComponent(whatsappMessage)}`;
-                window.open(whatsappLink, "_blank");
-              }}
-            >
-              WhatsApp
-            </button>
+    <div style={styles.contactButtons}>
+      <button
+        type="button"
+        style={styles.contactButton}
+        onClick={() => {
+          const form = document.querySelector<HTMLFormElement>("form")!;
+          const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+          const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+          const phone = (form.elements.namedItem("phone") as HTMLInputElement).value;
+          const message = (form.elements.namedItem("message") as HTMLTextAreaElement).value;
+          const whatsappMessage = `Nom: ${name}\nEmail: ${email}\nTéléphone: ${phone}\nMessage: ${message}`;
+          const whatsappLink = `https://wa.me/237677315024?text=${encodeURIComponent(whatsappMessage)}`;
+          window.open(whatsappLink, "_blank");
+        }}
+      >
+        WhatsApp
+      </button>
 
-            <button
-              type="button"
-              style={styles.contactButton}
-              onClick={() => {
-                const form = document.querySelector<HTMLFormElement>("form")!;
-                const name = (form.elements.namedItem("name") as HTMLInputElement).value;
-                const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-                const message = (form.elements.namedItem("message") as HTMLTextAreaElement).value;
-                const emailMessage = `Nom: ${name}\nEmail: ${email}\nMessage: ${message}`;
-                const mailtoLink = `mailto:activitymsm@gmail.com?subject=Contact depuis MSM&body=${encodeURIComponent(emailMessage)}`;
-                window.location.href = mailtoLink;
-              }}
-            >
-              Email
-            </button>
-          </div>
-        </form>
-      </section>
+      <button
+        type="button"
+        style={styles.contactButton}
+        onClick={() => {
+          const form = document.querySelector<HTMLFormElement>("form")!;
+          const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+          const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+          const phone = (form.elements.namedItem("phone") as HTMLInputElement).value;
+          const message = (form.elements.namedItem("message") as HTMLTextAreaElement).value;
+          const emailMessage = `Nom: ${name}\nEmail: ${email}\nTéléphone: ${phone}\nMessage: ${message}`;
+          const mailtoLink = `mailto:activitymsm@gmail.com?subject=Contact depuis MSM&body=${encodeURIComponent(emailMessage)}`;
+          window.location.href = mailtoLink;
+        }}
+      >
+        Email
+      </button>
+    </div>
+  </form>
+</section>
 
-      {/* ================= REVIEWS ================= */}
-<section id="reviews" style={styles.section}>
+
+      <section id="reviews" style={styles.section}>
   <h2 style={styles.title}>{lang === "fr" ? "Avis clients" : "Customer Reviews"}</h2>
   <p style={styles.lead}>
     {lang === "fr"
@@ -380,19 +703,18 @@ const addReview = (name: string, rating: number, comment: string) => {
 
   {/* Formulaire */}
   <form
-    style={styles.form}
-    onSubmit={(e) => {
-      e.preventDefault();
-      const form = e.target as HTMLFormElement;
-      const name = (form.elements.namedItem("name") as HTMLInputElement).value;
-      const rating = parseInt(
-        (form.elements.namedItem("rating") as HTMLSelectElement).value
-      );
-      const comment = (form.elements.namedItem("comment") as HTMLTextAreaElement).value;
-      addReview(name, rating, comment);
-      form.reset();
-    }}
-  >
+  style={styles.form}
+  onSubmit={async (e) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+    const rating = parseInt((form.elements.namedItem("rating") as HTMLSelectElement).value);
+    const comment = (form.elements.namedItem("comment") as HTMLTextAreaElement).value;
+    await addReviewFirebase(name, rating, comment);
+    form.reset();
+  }}
+>
+
     <input
       name="name"
       placeholder={lang === "fr" ? "Nom" : "Name"}
@@ -418,24 +740,22 @@ const addReview = (name: string, rating: number, comment: string) => {
   </form>
 
   {/* Liste des avis */}
-  <div style={{ marginTop: "40px" }}>
-    {reviews.length === 0 && (
+  <div style={{ marginTop: "40px", textAlign: "left", maxWidth: "700px", margin: "40px auto 0" }}>
+    {loadingReviews && <p>{lang === "fr" ? "Chargement des avis..." : "Loading reviews..."}</p>}
+    {!loadingReviews && reviews.length === 0 && (
       <p style={{ opacity: 0.7 }}>
-        {lang === "fr"
-          ? "Aucun avis pour le moment, soyez le premier à commenter !"
-          : "No reviews yet, be the first to comment!"}
+        {lang === "fr" ? "Aucun avis pour le moment, soyez le premier à commenter !" : "No reviews yet, be the first to comment!"}
       </p>
     )}
-    {reviews.map((r, i) => (
+    {!loadingReviews && reviews.map((r, i) => (
       <div
         key={i}
         style={{
           padding: "20px",
           borderBottom: "1px solid #ccc",
-          textAlign: "left",
           borderRadius: "8px",
           marginBottom: "20px",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+          boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
         }}
       >
         <strong>{r.name}</strong> — <span>{'⭐'.repeat(r.rating)}</span>
@@ -466,10 +786,10 @@ const addReview = (name: string, rating: number, comment: string) => {
   );
 }
 
-// ================= STYLES =================
 const styles: { [key: string]: React.CSSProperties } = {
+  // ================= HEADER =================
   header: {
-    position: "sticky" as const,
+    position: "sticky",
     top: 0,
     display: "flex",
     justifyContent: "space-between",
@@ -477,97 +797,228 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "15px 40px",
     background: "var(--msm-blue)",
     zIndex: 1000,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
   },
   logo: { display: "flex", alignItems: "center" },
   nav: { display: "flex", gap: "25px" },
-  link: { background: "none", border: "none", color: "var(--msm-orange)", fontSize: "16px", fontWeight: 500, cursor: "pointer", padding: "5px 10px" },
-  langButton: { background: "var(--msm-orange)", border: "none", color: "#fff", fontWeight: 500, padding: "6px 12px", borderRadius: 8, cursor: "pointer" },
+  link: {
+    background: "none",
+    border: "none",
+    color: "var(--msm-orange)",
+    fontSize: "16px",
+    fontWeight: 500,
+    cursor: "pointer",
+    padding: "5px 10px",
+    transition: "color 0.3s ease",
+  },
+  langButton: {
+    background: "var(--msm-orange)",
+    border: "none",
+    color: "#fff",
+    fontWeight: 500,
+    padding: "6px 12px",
+    borderRadius: 8,
+    cursor: "pointer",
+    transition: "transform 0.2s ease",
+  },
 
-  section: { padding: "90px 20px", maxWidth: "1100px", margin: "0 auto", textAlign: "center" },
-  hero: { padding: "120px 20px", textAlign: "center" },
-  title: { color: "var(--msm-orange)", marginBottom: "30px" },
-  lead: { fontSize: "18px", maxWidth: "800px", margin: "0 auto", lineHeight: 1.6 },
-stats: {
-  display: "flex",
-  flexDirection: "row", // par défaut
-  justifyContent: "center",
-  gap: "60px",
-  padding: "60px 20px",
-  background: "#fff",
-  flexWrap: "wrap", // ajoute wrap pour que ça passe en ligne suivante si besoin
-  textAlign: "center",
-},
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "30px" },
-  card: { padding: "32px", borderRadius: "14px", background: "#fff", boxShadow: "0 6px 18px rgba(0,0,0,0.08)", transition: "all 0.3s ease", cursor: "pointer" },
+  // ================= SECTIONS =================
+  section: {
+    padding: "100px 20px",
+    maxWidth: "1100px",
+    margin: "0 auto",
+    textAlign: "center",
+    transition: "all 0.4s ease",
+  },
+  hero: {
+    padding: "140px 20px",
+    textAlign: "center",
+    background: "linear-gradient(135deg, #0f172a, #1e293b)",
+    color: "#fff",
+  },
+  intro: {
+    padding: "100px 20px",
+    maxWidth: "900px",
+    margin: "0 auto",
+    textAlign: "center",
+  },
+  stats: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "60px",
+    padding: "80px 20px",
+    background: "#fff",
+    flexWrap: "wrap",
+    textAlign: "center",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+    gap: "30px",
+    transition: "all 0.3s ease",
+  },
+
+  // ================= CARDS =================
+  card: {
+    padding: "36px",
+    borderRadius: "16px",
+    background: "#ffffff",
+    boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    cursor: "pointer",
+    transform: "translateY(0)",
+  },
+  cardHover: {
+    transform: "translateY(-8px)",
+    boxShadow: "0 16px 40px rgba(15,23,42,0.15)",
+  },
   icon: { color: "var(--msm-orange)", marginBottom: "20px" },
   cardTitle: { marginBottom: "12px", color: "var(--msm-orange)" },
-  why: { padding: "90px 20px", background: "#0f172a", color: "#fff", textAlign: "center" },
-  whyCard: { display: "flex", alignItems: "center", gap: "12px", background: "#111827", padding: "22px", borderRadius: "12px" },
-partnersGrid: {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-  gap: "30px",
-  marginTop: "50px",
-  justifyItems: "center", // centre les logos et textes
-},
-partnerCard: {
-  padding: "30px",
-  borderRadius: "14px",
-  background: "#fff",
-  boxShadow: "0 8px 22px rgba(0,0,0,0.08)",
-  transition: "transform 0.3s ease",
-  cursor: "pointer",
-  textAlign: "center",
-},
-partnerField: { marginTop: "10px", fontWeight: 500 },
-partnerYears: { display: "block", marginTop: "8px", fontSize: "14px", opacity: 0.7 },
 
+  // ================= POURQUOI =================
+  why: {
+    padding: "100px 20px",
+    background: "#0f172a",
+    color: "#fff",
+    textAlign: "center",
+  },
+  whyCard: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "16px",
+    background: "#111827",
+    padding: "28px",
+    borderRadius: "14px",
+    textAlign: "left",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+  },
+  whyCardHover: {
+    transform: "translateY(-6px)",
+    boxShadow: "0 12px 30px rgba(0,0,0,0.2)",
+  },
+
+  // ================= PARTENAIRES =================
+  partnersGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "30px",
+    marginTop: "50px",
+    justifyItems: "center",
+    transition: "all 0.3s ease",
+  },
+  partnerCard: {
+    padding: "30px",
+    borderRadius: "14px",
+    background: "#fff",
+    boxShadow: "0 8px 22px rgba(0,0,0,0.08)",
+    cursor: "pointer",
+    textAlign: "center",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+  },
+  partnerCardHover: {
+    transform: "translateY(-6px)",
+    boxShadow: "0 16px 36px rgba(0,0,0,0.15)",
+  },
+  partnerDescription: {
+    marginTop: "12px",
+    fontSize: "14px",
+    lineHeight: 1.6,
+    opacity: 0.85,
+  },
+  partnerButton: {
+    display: "inline-block",
+    marginTop: "16px",
+    padding: "10px 18px",
+    borderRadius: "8px",
+    background: "var(--msm-orange)",
+    color: "#fff",
+    textDecoration: "none",
+    fontWeight: 500,
+    fontSize: "14px",
+    transition: "all 0.3s ease",
+  },
+  partnerField: { marginTop: "10px", fontWeight: 500 },
+  partnerYears: { display: "block", marginTop: "8px", fontSize: "14px", opacity: 0.7 },
+
+  // ================= PROCESS =================
   process: { maxWidth: "600px", margin: "0 auto", textAlign: "left", lineHeight: 2 },
+
+  // ================= CTA =================
   cta: { padding: "110px 20px", color: "#fff", textAlign: "center" },
-  ctaButton: { marginTop: "24px", padding: "16px 38px", fontSize: "18px", borderRadius: "30px", border: "none", cursor: "pointer", background: "var(--msm-orange)", color: "#fff" },
+  ctaButton: {
+    marginTop: "24px",
+    padding: "16px 38px",
+    fontSize: "18px",
+    borderRadius: "30px",
+    border: "none",
+    cursor: "pointer",
+    background: "var(--msm-orange)",
+    color: "#fff",
+    transition: "all 0.3s ease",
+  },
+  ctaButtonHover: {
+    transform: "scale(1.05)",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+  },
+
+  // ================= FORM =================
   form: { display: "flex", flexDirection: "column", gap: "20px", maxWidth: "500px", margin: "0 auto" },
-  input: { padding: "14px", borderRadius: "8px", border: "1px solid #ccc" },
-  textarea: { padding: "14px", borderRadius: "8px", border: "1px solid #ccc", minHeight: "120px" },
+  input: {
+    padding: "14px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    transition: "border-color 0.3s ease, box-shadow 0.3s ease",
+  },
+  inputFocus: {
+    borderColor: "var(--msm-orange)",
+    boxShadow: "0 0 8px rgba(251,146,60,0.4)",
+  },
+  textarea: {
+    padding: "14px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    minHeight: "120px",
+    transition: "border-color 0.3s ease, box-shadow 0.3s ease",
+  },
+  textareaFocus: {
+    borderColor: "var(--msm-orange)",
+    boxShadow: "0 0 8px rgba(251,146,60,0.4)",
+  },
   contactButtons: { display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap", marginTop: "20px" },
-  contactButton: { padding: "14px 28px", borderRadius: "8px", background: "var(--msm-orange)", color: "#fff", fontWeight: 500, cursor: "pointer", transition: "all 0.3s ease" },
+  contactButton: {
+    padding: "14px 28px",
+    borderRadius: "8px",
+    background: "var(--msm-orange)",
+    color: "#fff",
+    fontWeight: 500,
+    cursor: "pointer",
+    transition: "all 0.3s ease",
+  },
+
+  // ================= FOOTER =================
   footer: { padding: "30px 20px", textAlign: "center", background: "#0f172a", color: "#fff" },
 
-  intro: {
-  padding: "80px 20px",
-  maxWidth: "900px",
-  margin: "0 auto",
-  textAlign: "center",
-},
-burger: {
-  display: "none",
-  fontSize: "28px",
-  background: "none",
-  border: "none",
-  color: "#fff",
-  cursor: "pointer",
-},
+  // ================= BURGER =================
+  burger: { display: "none", fontSize: "28px", background: "none", border: "none", color: "#fff", cursor: "pointer" },
 
-mobileMenu: {
-  position: "absolute",
-  top: "100%",
-  left: 0,
-  width: "100%",
-  background: "var(--msm-blue)",
-  display: "flex",
-  flexDirection: "column",
-  padding: "20px 0",
-  zIndex: 999,
-},
-
-mobileLink: {
-  padding: "14px 0",
-  background: "none",
-  border: "none",
-  color: "var(--msm-orange)",
-  fontSize: "18px",
-  cursor: "pointer",
-},
-
-
+  mobileMenu: {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    width: "100%",
+    background: "var(--msm-blue)",
+    display: "flex",
+    flexDirection: "column",
+    padding: "20px 0",
+    zIndex: 999,
+  },
+  mobileLink: {
+    padding: "14px 0",
+    background: "none",
+    border: "none",
+    color: "var(--msm-orange)",
+    fontSize: "18px",
+    cursor: "pointer",
+  },
 };
+
